@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,7 +53,7 @@ fun AppNavigation(viewModel: MainViewModel) {
     val rightNavItem = BottomNavItem.History
     val settingsNavItem = BottomNavItem.Settings
 
-    // Show bottom navigation bar and FAB on the three main tabs: Home, History, and Settings
+    // Show bottom navigation bar on the three main tabs: Home, History, and Settings
     val showNavElements = currentDestination?.route == leftNavItem.route || 
             currentDestination?.route == rightNavItem.route ||
             currentDestination?.route == settingsNavItem.route
@@ -66,36 +68,6 @@ fun AppNavigation(viewModel: MainViewModel) {
     }
 
     Scaffold(
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = showNavElements,
-                enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(durationMillis = 300)),
-                exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(durationMillis = 300))
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        triggerHaptic()
-                        navController.navigate(BottomNavItem.AddMedicine.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    shape = CircleShape,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(bottom = 12.dp, end = 4.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "Add Medicine",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
         bottomBar = {
             AnimatedVisibility(
                 visible = showNavElements,
@@ -108,59 +80,100 @@ fun AppNavigation(viewModel: MainViewModel) {
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
+                    // Floating Bottom Dock Pill Bar
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(72.dp)
                             .clip(RoundedCornerShape(36.dp))
                             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 1. LEFT ICON: HOME
-                        val isHomeSelected = currentDestination?.hierarchy?.any { it.route == leftNavItem.route } == true
-                        CustomBottomNavigationItem(
-                            screen = leftNavItem,
-                            isSelected = isHomeSelected,
-                            onClick = {
-                                triggerHaptic()
-                                navController.navigate(leftNavItem.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                        // 1. LEFT SIDE: HOME & HISTORY
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val isHomeSelected = currentDestination?.hierarchy?.any { it.route == leftNavItem.route } == true
+                            CustomBottomNavigationItem(
+                                screen = leftNavItem,
+                                isSelected = isHomeSelected,
+                                onClick = {
+                                    triggerHaptic()
+                                    navController.navigate(leftNavItem.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
-                        )
+                            )
 
-                        // 2. CENTER ICON: HISTORY
-                        val isHistorySelected = currentDestination?.hierarchy?.any { it.route == rightNavItem.route } == true
-                        CustomBottomNavigationItem(
-                            screen = rightNavItem,
-                            isSelected = isHistorySelected,
-                            onClick = {
-                                triggerHaptic()
-                                navController.navigate(rightNavItem.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                            val isHistorySelected = currentDestination?.hierarchy?.any { it.route == rightNavItem.route } == true
+                            CustomBottomNavigationItem(
+                                screen = rightNavItem,
+                                isSelected = isHistorySelected,
+                                onClick = {
+                                    triggerHaptic()
+                                    navController.navigate(rightNavItem.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
 
-                        // 3. RIGHT ICON: SETTINGS
-                        val isSettingsSelected = currentDestination?.hierarchy?.any { it.route == settingsNavItem.route } == true
-                        CustomBottomNavigationItem(
-                            screen = settingsNavItem,
-                            isSelected = isSettingsSelected,
-                            onClick = {
-                                triggerHaptic()
-                                navController.navigate(settingsNavItem.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                        // 2. CENTER SPACER: Keeps space clear for overlapping FAB
+                        Spacer(modifier = Modifier.width(72.dp))
+
+                        // 3. RIGHT SIDE: SETTINGS
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val isSettingsSelected = currentDestination?.hierarchy?.any { it.route == settingsNavItem.route } == true
+                            CustomBottomNavigationItem(
+                                screen = settingsNavItem,
+                                isSelected = isSettingsSelected,
+                                onClick = {
+                                    triggerHaptic()
+                                    navController.navigate(settingsNavItem.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
+                            )
+                        }
+                    }
+
+                    // 4. CENTER EMBEDDED FAB
+                    FloatingActionButton(
+                        onClick = {
+                            triggerHaptic()
+                            navController.navigate(BottomNavItem.AddMedicine.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
+                        },
+                        shape = CircleShape,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .align(Alignment.Center)
+                            .offset(y = (-4).dp),
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add Medicine",
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
@@ -205,7 +218,7 @@ fun AppNavigation(viewModel: MainViewModel) {
             composable(BottomNavItem.History.route) {
                 HistoryScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
             }
-            composable(BottomNavItem.Settings.route) {
+            composable(settingsNavItem.route) {
                 SettingsScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
             }
         }

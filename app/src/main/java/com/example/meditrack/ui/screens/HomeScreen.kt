@@ -144,13 +144,7 @@ fun HomeScreen(
             quote = randomQuote,
             takenDoses = takenDoses,
             totalDoses = totalDoses,
-            progress = animatedProgress,
-            onSettingsClick = {
-                if (hapticEnabled) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                }
-                navController.navigate("settings")
-            }
+            progress = animatedProgress
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -205,8 +199,7 @@ fun DailyProgressHeader(
     quote: String,
     takenDoses: Int,
     totalDoses: Int,
-    progress: Float,
-    onSettingsClick: () -> Unit
+    progress: Float
 ) {
     Box(
         modifier = Modifier
@@ -224,19 +217,6 @@ fun DailyProgressHeader(
             .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 28.dp)
     ) {
-        // Settings Icon at Top Right
-        IconButton(
-            onClick = onSettingsClick,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = 12.dp, y = (-12).dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
