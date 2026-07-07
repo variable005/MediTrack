@@ -1,0 +1,53 @@
+# Built artifacts
+**/build/
+*.apk
+*.aar
+*.ap_
+*.der
+
+# Gradle files
+.gradle/
+/local.properties
+/gradle.properties
+/buildSrc/build/
+.gradle-credentials.properties
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetSelector.xml
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Signing files (security)
+*.jks
+*.keystore
+*.pk8
+*.pem
+
+# Local configuration files
+local.properties
+
+# Cache files
+.kotlin/
+.ksp/
+
+# AI and Agent workspace config/local files
+.agents/
+.gemini/
+task.md
+implementation_plan.md
+walkthrough.md
