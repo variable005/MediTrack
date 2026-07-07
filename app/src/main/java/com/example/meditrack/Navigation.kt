@@ -1,9 +1,7 @@
 package com.example.meditrack
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,11 +21,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -36,6 +38,7 @@ import com.example.meditrack.navigation.BottomNavItem
 import com.example.meditrack.ui.screens.AddMedicineScreen
 import com.example.meditrack.ui.screens.HistoryScreen
 import com.example.meditrack.ui.screens.HomeScreen
+import com.example.meditrack.ui.screens.SettingsScreen
 import com.example.meditrack.viewmodel.MainViewModel
 
 @Composable
@@ -46,10 +49,53 @@ fun AppNavigation(viewModel: MainViewModel) {
 
     val leftNavItem = BottomNavItem.Home
     val rightNavItem = BottomNavItem.History
+    val settingsNavItem = BottomNavItem.Settings
 
-    val showNavElements = currentDestination?.route != BottomNavItem.AddMedicine.route
+    // Show bottom navigation bar and FAB on the three main tabs: Home, History, and Settings
+    val showNavElements = currentDestination?.route == leftNavItem.route || 
+            currentDestination?.route == rightNavItem.route ||
+            currentDestination?.route == settingsNavItem.route
+
+    val hapticFeedback = LocalHapticFeedback.current
+    val hapticEnabled by viewModel.hapticEnabled.collectAsState()
+
+    val triggerHaptic = {
+        if (hapticEnabled) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
 
     Scaffold(
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = showNavElements,
+                enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(durationMillis = 300)),
+                exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(durationMillis = 300))
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        triggerHaptic()
+                        navController.navigate(BottomNavItem.AddMedicine.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(bottom = 12.dp, end = 4.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add Medicine",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
         bottomBar = {
             AnimatedVisibility(
                 visible = showNavElements,
@@ -78,6 +124,7 @@ fun AppNavigation(viewModel: MainViewModel) {
                             screen = leftNavItem,
                             isSelected = isHomeSelected,
                             onClick = {
+                                triggerHaptic()
                                 navController.navigate(leftNavItem.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
@@ -86,37 +133,29 @@ fun AppNavigation(viewModel: MainViewModel) {
                             }
                         )
 
-                        // 2. CENTER EMBEDDED FAB
-                        FloatingActionButton(
-                            onClick = {
-                                navController.navigate(BottomNavItem.AddMedicine.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .offset(y = (-4).dp),
-                            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Add Medicine",
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-
-                        // 3. RIGHT ICON: HISTORY
+                        // 2. CENTER ICON: HISTORY
                         val isHistorySelected = currentDestination?.hierarchy?.any { it.route == rightNavItem.route } == true
                         CustomBottomNavigationItem(
                             screen = rightNavItem,
                             isSelected = isHistorySelected,
                             onClick = {
+                                triggerHaptic()
                                 navController.navigate(rightNavItem.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+
+                        // 3. RIGHT ICON: SETTINGS
+                        val isSettingsSelected = currentDestination?.hierarchy?.any { it.route == settingsNavItem.route } == true
+                        CustomBottomNavigationItem(
+                            screen = settingsNavItem,
+                            isSelected = isSettingsSelected,
+                            onClick = {
+                                triggerHaptic()
+                                navController.navigate(settingsNavItem.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
@@ -131,7 +170,31 @@ fun AppNavigation(viewModel: MainViewModel) {
         NavHost(
             navController = navController,
             startDestination = BottomNavItem.Home.route,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(350, easing = EaseInOutCubic)
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(350, easing = EaseInOutCubic)
+                ) + fadeOut(animationSpec = tween(350))
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(350, easing = EaseInOutCubic)
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(350, easing = EaseInOutCubic)
+                ) + fadeOut(animationSpec = tween(350))
+            }
         ) {
             composable(BottomNavItem.Home.route) {
                 HomeScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
@@ -141,6 +204,9 @@ fun AppNavigation(viewModel: MainViewModel) {
             }
             composable(BottomNavItem.History.route) {
                 HistoryScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
+            }
+            composable(BottomNavItem.Settings.route) {
+                SettingsScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
             }
         }
     }
@@ -152,6 +218,16 @@ fun RowScope.CustomBottomNavigationItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    // Spring-loaded selection bounce scale
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.18f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "TabScaleAnimation"
+    )
+
     Surface(
         onClick = onClick,
         color = Color.Transparent,
@@ -168,7 +244,8 @@ fun RowScope.CustomBottomNavigationItem(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent),
+                    .background(if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                    .scale(scale),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

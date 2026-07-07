@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.navigation.NavController
 import com.example.meditrack.data.Medicine
 import com.example.meditrack.ui.theme.ExpiryGreen
@@ -87,6 +89,9 @@ fun HomeScreen(
     val welcomeMessage = getWelcomeMessage()
     val randomQuote = remember { healthQuotes.random(Random(System.currentTimeMillis())) }
 
+    val hapticFeedback = LocalHapticFeedback.current
+    val hapticEnabled by viewModel.hapticEnabled.collectAsState()
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val notificationPermissionState = rememberPermissionState(
             android.Manifest.permission.POST_NOTIFICATIONS
@@ -139,7 +144,13 @@ fun HomeScreen(
             quote = randomQuote,
             takenDoses = takenDoses,
             totalDoses = totalDoses,
-            progress = animatedProgress
+            progress = animatedProgress,
+            onSettingsClick = {
+                if (hapticEnabled) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+                navController.navigate("settings")
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -156,6 +167,9 @@ fun HomeScreen(
                 nextMedicine = nextMedicine,
                 isMissed = isMissed,
                 onMarkAsTaken = {
+                    if (hapticEnabled) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     nextMedicine?.let { viewModel.markAsTaken(context, it) }
                 }
             )
@@ -169,7 +183,12 @@ fun HomeScreen(
             TimeSectionCard(
                 timeOfDay = timeOfDay,
                 medicines = medicinesInSection,
-                onMarkAsTaken = { medicine -> viewModel.markAsTaken(context, medicine) }
+                onMarkAsTaken = { medicine ->
+                    if (hapticEnabled) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                    viewModel.markAsTaken(context, medicine)
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -186,7 +205,8 @@ fun DailyProgressHeader(
     quote: String,
     takenDoses: Int,
     totalDoses: Int,
-    progress: Float
+    progress: Float,
+    onSettingsClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -204,6 +224,19 @@ fun DailyProgressHeader(
             .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 28.dp)
     ) {
+        // Settings Icon at Top Right
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 12.dp, y = (-12).dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Settings",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically

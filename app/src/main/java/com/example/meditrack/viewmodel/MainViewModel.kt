@@ -1,14 +1,18 @@
 package com.example.meditrack.viewmodel
 
+import android.app.Application
 import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.meditrack.data.Medicine
 import com.example.meditrack.data.MedicineRepository
 import com.example.meditrack.reminders.AlarmScheduler
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,10 +25,46 @@ enum class TimeOfDay {
 }
 
 class MainViewModel(
+    application: Application,
     private val repository: MedicineRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
-    // --- Updated Helper function to categorize time ---
+    private val sharedPreferences = application.getSharedPreferences("meditrack_settings", Context.MODE_PRIVATE)
+
+    // --- Settings flows ---
+    private val _hapticEnabled = MutableStateFlow(sharedPreferences.getBoolean("haptic_enabled", true))
+    val hapticEnabled: StateFlow<Boolean> = _hapticEnabled.asStateFlow()
+
+    private val _themeMode = MutableStateFlow(sharedPreferences.getString("theme_mode", "system") ?: "system")
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
+    private val _textSize = MutableStateFlow(sharedPreferences.getString("text_size", "medium") ?: "medium")
+    val textSize: StateFlow<String> = _textSize.asStateFlow()
+
+    private val _themeColor = MutableStateFlow(sharedPreferences.getString("theme_color", "teal") ?: "teal")
+    val themeColor: StateFlow<String> = _themeColor.asStateFlow()
+
+    fun setHapticEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("haptic_enabled", enabled).apply()
+        _hapticEnabled.value = enabled
+    }
+
+    fun setThemeMode(mode: String) {
+        sharedPreferences.edit().putString("theme_mode", mode).apply()
+        _themeMode.value = mode
+    }
+
+    fun setTextSize(size: String) {
+        sharedPreferences.edit().putString("text_size", size).apply()
+        _textSize.value = size
+    }
+
+    fun setThemeColor(color: String) {
+        sharedPreferences.edit().putString("theme_color", color).apply()
+        _themeColor.value = color
+    }
+
+    // --- Helper function to categorize time ---
     private fun getGroupForTime(time: LocalTime): TimeOfDay {
         return when (time.hour) {
             in 5..11 -> TimeOfDay.Morning    // 5:00 AM - 11:59 AM
@@ -36,9 +76,7 @@ class MainViewModel(
     // --- StateFlow for grouped medicines using Enum ---
     val groupedActiveMedicines: StateFlow<Map<TimeOfDay, List<Medicine>>> = repository.activeMedicines
         .map { medicines ->
-            // Group by the enum
             val grouped = medicines.groupBy { getGroupForTime(it.reminderTime) }
-            // Ensure all keys exist, even if empty, and sort correctly
             val sortedMap = sortedMapOf<TimeOfDay, List<Medicine>>()
             sortedMap[TimeOfDay.Morning] = grouped.getOrDefault(TimeOfDay.Morning, emptyList())
             sortedMap[TimeOfDay.Afternoon] = grouped.getOrDefault(TimeOfDay.Afternoon, emptyList())
@@ -48,14 +86,13 @@ class MainViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = mapOf( // Start with all keys present
+            initialValue = mapOf(
                 TimeOfDay.Morning to emptyList(),
                 TimeOfDay.Afternoon to emptyList(),
                 TimeOfDay.Night to emptyList()
             )
         )
 
-    // Public access for HistoryScreen
     val activeMedicines: StateFlow<List<Medicine>> = repository.activeMedicines
         .stateIn(
             scope = viewModelScope,
@@ -97,12 +134,14 @@ class MainViewModel(
     }
 }
 
-// Factory remains the same
-class MainViewModelFactory(private val repository: MedicineRepository) : ViewModelProvider.Factory {
+class MainViewModelFactory(
+    private val application: Application,
+    private val repository: MedicineRepository
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository) as T
+            return MainViewModel(application, repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 // This sealed class holds the data for each navigation item.
@@ -36,5 +38,12 @@ sealed class BottomNavItem(
         label = "History",
         selectedIcon = Icons.Filled.History,
         unselectedIcon = Icons.Outlined.History
+    )
+
+    object Settings : BottomNavItem(
+        route = "settings",
+        label = "Settings",
+        selectedIcon = Icons.Filled.Settings,
+        unselectedIcon = Icons.Outlined.Settings
     )
 }
