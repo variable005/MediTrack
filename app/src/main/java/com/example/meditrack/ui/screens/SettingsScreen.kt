@@ -372,6 +372,20 @@ fun SettingsScreen(
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     )
+
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+
+                    Text(
+                        text = "Disclaimer: Provided \"as is\" without warranty. Not a medical device. Use at your own risk.",
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 

@@ -1,5 +1,8 @@
 # MediTrack
 
+> [!WARNING]
+> **Disclaimer:** This project is open-source and provided "as is" without warranty of any kind, express or implied. It is a personal development project and is not intended to substitute for professional medical advice, diagnosis, or treatment. Always consult a healthcare provider for any medical decisions. The developer is not liable for any missed doses, alarm failures, or other issues resulting from using this software.
+
 A clean, modern, and privacy-focused Android application designed to help you track your daily medication schedules and stay consistent with your doses.
 
 ---
