@@ -80,23 +80,23 @@ fun AppNavigation(viewModel: MainViewModel) {
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    // Floating Bottom Dock Pill Bar
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(72.dp)
-                            .clip(RoundedCornerShape(36.dp))
-                            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 1. LEFT SIDE: HOME & HISTORY
+                        // 1. Floating Bottom Dock Pill Bar (Left side)
                         Row(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(72.dp)
+                                .clip(RoundedCornerShape(36.dp))
+                                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+                                .padding(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.SpaceAround,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Home Tab
                             val isHomeSelected = currentDestination?.hierarchy?.any { it.route == leftNavItem.route } == true
                             CustomBottomNavigationItem(
                                 screen = leftNavItem,
@@ -111,6 +111,7 @@ fun AppNavigation(viewModel: MainViewModel) {
                                 }
                             )
 
+                            // History Tab
                             val isHistorySelected = currentDestination?.hierarchy?.any { it.route == rightNavItem.route } == true
                             CustomBottomNavigationItem(
                                 screen = rightNavItem,
@@ -124,17 +125,8 @@ fun AppNavigation(viewModel: MainViewModel) {
                                     }
                                 }
                             )
-                        }
 
-                        // 2. CENTER SPACER: Keeps space clear for overlapping FAB
-                        Spacer(modifier = Modifier.width(72.dp))
-
-                        // 3. RIGHT SIDE: SETTINGS
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                            // Settings Tab
                             val isSettingsSelected = currentDestination?.hierarchy?.any { it.route == settingsNavItem.route } == true
                             CustomBottomNavigationItem(
                                 screen = settingsNavItem,
@@ -149,32 +141,29 @@ fun AppNavigation(viewModel: MainViewModel) {
                                 }
                             )
                         }
-                    }
 
-                    // 4. CENTER EMBEDDED FAB
-                    FloatingActionButton(
-                        onClick = {
-                            triggerHaptic()
-                            navController.navigate(BottomNavItem.AddMedicine.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        shape = CircleShape,
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .align(Alignment.Center)
-                            .offset(y = (-4).dp),
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add Medicine",
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // 2. Separate Floating Action Button (Right side, matching search circle design)
+                        FloatingActionButton(
+                            onClick = {
+                                triggerHaptic()
+                                navController.navigate(BottomNavItem.AddMedicine.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            shape = CircleShape,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(72.dp), // Height matches dock pill
+                            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Add Medicine",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }
