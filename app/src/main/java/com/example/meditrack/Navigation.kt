@@ -230,24 +230,22 @@ fun RowScope.CustomBottomNavigationItem(
         label = "TabScaleAnimation"
     )
 
-    Surface(
-        onClick = onClick,
-        color = Color.Transparent,
+    Box(
         modifier = Modifier
             .weight(1f)
-            .height(56.dp)
+            .height(56.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Surface(
+            onClick = onClick,
+            shape = CircleShape,
+            color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+            modifier = Modifier
+                .size(48.dp)
+                .scale(scale)
         ) {
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                    .scale(scale),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
