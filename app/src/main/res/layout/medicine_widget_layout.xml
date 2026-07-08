@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card_background"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header: Title and Progress -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MediTrack"
+            android:textColor="#191C1C"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_progress_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="Taken: 0 / 0"
+            android:textColor="#3F4948"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Progress Indicator Bar -->
+    <ProgressBar
+        android:id="@+id/widget_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginBottom="12dp"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="@color/theme_teal" />
+
+    <!-- Section Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0EAEA"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Next Up Detail Column -->
+    <LinearLayout
+        android:id="@+id/widget_next_up_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Info Column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_next_up_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NEXT UP"
+                android:textColor="@color/theme_teal"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/widget_med_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No medicines scheduled"
+                android:textColor="#191C1C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/widget_med_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All caught up!"
+                android:textColor="#3F4948"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Action Button -->
+        <Button
+            android:id="@+id/widget_btn_take"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:paddingHorizontal="12dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/theme_teal"
+            android:text="TAKE"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

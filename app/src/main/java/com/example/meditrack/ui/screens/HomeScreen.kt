@@ -16,11 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -91,6 +87,31 @@ fun HomeScreen(
 
     val hapticFeedback = LocalHapticFeedback.current
     val hapticEnabled by viewModel.hapticEnabled.collectAsState()
+
+    var medicineToDelete by remember { mutableStateOf<Medicine?>(null) }
+
+    if (medicineToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { medicineToDelete = null },
+            title = { Text("Delete Medication") },
+            text = { Text("Are you sure you want to delete \"${medicineToDelete?.name}\"? This will permanently cancel all upcoming reminders.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        medicineToDelete?.let { viewModel.deleteMedicine(context, it) }
+                        medicineToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { medicineToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val notificationPermissionState = rememberPermissionState(
@@ -182,6 +203,12 @@ fun HomeScreen(
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                     viewModel.markAsTaken(context, medicine)
+                },
+                onDelete = { medicine ->
+                    if (hapticEnabled) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                    medicineToDelete = medicine
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -441,7 +468,8 @@ fun NextUpCard(
 fun TimeSectionCard(
     timeOfDay: TimeOfDay,
     medicines: List<Medicine>,
-    onMarkAsTaken: (Medicine) -> Unit
+    onMarkAsTaken: (Medicine) -> Unit,
+    onDelete: (Medicine) -> Unit
 ) {
     val sectionIcon = when (timeOfDay) {
         TimeOfDay.Morning -> Icons.Filled.WbSunny
@@ -527,6 +555,7 @@ fun TimeSectionCard(
                     MedicineItem(
                         medicine = medicine,
                         onMarkAsTaken = { onMarkAsTaken(medicine) },
+                        onDelete = { onDelete(medicine) },
                         modifier = Modifier.padding(vertical = 6.dp)
                     )
                     if (index < medicines.size - 1) {
@@ -546,6 +575,7 @@ fun TimeSectionCard(
 fun MedicineItem(
     medicine: Medicine,
     onMarkAsTaken: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -602,6 +632,18 @@ fun MedicineItem(
                 )
             }
         }
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = "Delete Medicine",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+            )
+        }
+        Spacer(modifier = Modifier.width(4.dp))
         IconButton(
             onClick = onMarkAsTaken,
             enabled = !isTakenToday,

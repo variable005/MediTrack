@@ -7,4 +7,21 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Widget Backgrounds -->
+    <color name="widget_background">#FAFAFA</color>
+    <color name="widget_background_dark">#121212</color>
+
+    <!-- Theme primary colors for widgets -->
+    <color name="theme_teal">#00696B</color>
+    <color name="theme_blue">#1976D2</color>
+    <color name="theme_purple">#6750A4</color>
+    <color name="theme_green">#386A20</color>
+    <color name="theme_orange">#8B5000</color>
+
+    <color name="theme_teal_container">#E0F7F7</color>
+    <color name="theme_blue_container">#D1E4FF</color>
+    <color name="theme_purple_container">#EADDFF</color>
+    <color name="theme_green_container">#B8F397</color>
+    <color name="theme_orange_container">#FFFFDCC1</color>
 </resources>

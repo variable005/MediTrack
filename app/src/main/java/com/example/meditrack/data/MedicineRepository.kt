@@ -23,4 +23,8 @@ class MedicineRepository(private val medicineDao: MedicineDao) {
     suspend fun getAllActiveForReschedule(): List<Medicine> {
         return medicineDao.getAllActiveForReschedule()
     }
+
+    suspend fun delete(medicine: Medicine) {
+        medicineDao.delete(medicine)
+    }
 }

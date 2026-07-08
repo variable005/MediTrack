@@ -10,11 +10,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -36,11 +40,40 @@ fun HistoryScreen(
     viewModel: MainViewModel,
     paddingValues: PaddingValues = PaddingValues()
 ) {
+    val context = LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
+    val hapticEnabled by viewModel.hapticEnabled.collectAsState()
+
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Active", "Expired")
 
     val activeMedicines by viewModel.activeMedicines.collectAsState()
     val expiredMedicines by viewModel.expiredMedicines.collectAsState()
+
+    var medicineToDelete by remember { mutableStateOf<Medicine?>(null) }
+
+    if (medicineToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { medicineToDelete = null },
+            title = { Text("Delete Medication") },
+            text = { Text("Are you sure you want to delete \"${medicineToDelete?.name}\"? This will permanently cancel all upcoming reminders.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        medicineToDelete?.let { viewModel.deleteMedicine(context, it) }
+                        medicineToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { medicineToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -104,12 +137,24 @@ fun HistoryScreen(
                     list = activeMedicines,
                     emptyMessage = "No active medicines found.",
                     isExpired = false,
+                    onDelete = { medicine ->
+                        if (hapticEnabled) {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        medicineToDelete = medicine
+                    },
                     paddingValues = paddingValues
                 )
                 1 -> MedicineHistoryList(
                     list = expiredMedicines,
                     emptyMessage = "No expired medicines found.",
                     isExpired = true,
+                    onDelete = { medicine ->
+                        if (hapticEnabled) {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        medicineToDelete = medicine
+                    },
                     paddingValues = paddingValues
                 )
             }
@@ -122,6 +167,7 @@ fun MedicineHistoryList(
     list: List<Medicine>,
     emptyMessage: String,
     isExpired: Boolean,
+    onDelete: (Medicine) -> Unit,
     paddingValues: PaddingValues = PaddingValues()
 ) {
     if (list.isEmpty()) {
@@ -140,7 +186,8 @@ fun MedicineHistoryList(
             items(list, key = { it.id }) { medicine ->
                 HistoryMedicineItem(
                     medicine = medicine,
-                    isExpired = isExpired
+                    isExpired = isExpired,
+                    onDelete = { onDelete(medicine) }
                 )
             }
         }
@@ -176,6 +223,7 @@ fun EmptyHistoryState(message: String) {
 fun HistoryMedicineItem(
     medicine: Medicine,
     isExpired: Boolean,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -287,6 +335,18 @@ fun HistoryMedicineItem(
                         color = ExpiryGreen
                     )
                 }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete Medicine",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                )
             }
         }
     }

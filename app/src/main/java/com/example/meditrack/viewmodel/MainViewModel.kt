@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.meditrack.data.Medicine
 import com.example.meditrack.data.MedicineRepository
 import com.example.meditrack.reminders.AlarmScheduler
+import com.example.meditrack.widget.MedicineWidgetProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +63,7 @@ class MainViewModel(
     fun setThemeColor(color: String) {
         sharedPreferences.edit().putString("theme_color", color).apply()
         _themeColor.value = color
+        MedicineWidgetProvider.updateAllWidgets(getApplication())
     }
 
     // --- Helper function to categorize time ---
@@ -121,6 +123,7 @@ class MainViewModel(
             if (insertedMedicine != null) {
                 AlarmScheduler.scheduleReminder(context, insertedMedicine)
             }
+            MedicineWidgetProvider.updateAllWidgets(context)
         }
     }
 
@@ -130,6 +133,15 @@ class MainViewModel(
             repository.update(updatedMedicine)
             AlarmScheduler.cancelReminder(context, medicine)
             AlarmScheduler.scheduleReminder(context, updatedMedicine)
+            MedicineWidgetProvider.updateAllWidgets(context)
+        }
+     }
+
+    fun deleteMedicine(context: Context, medicine: Medicine) {
+        viewModelScope.launch {
+            AlarmScheduler.cancelReminder(context, medicine)
+            repository.delete(medicine)
+            MedicineWidgetProvider.updateAllWidgets(context)
         }
     }
 }
