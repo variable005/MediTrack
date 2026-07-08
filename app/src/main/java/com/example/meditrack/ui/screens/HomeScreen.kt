@@ -9,7 +9,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -48,8 +47,6 @@ import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import kotlin.random.Random
 
-// (Health quotes, welcome message, and isTakenToday functions are unchanged)
-// ...
 private val healthQuotes = listOf(
     "The greatest wealth is health.",
     "Take care of your body. It's the only place you have to live.",
@@ -57,6 +54,7 @@ private val healthQuotes = listOf(
     "Consistency is key to achieving your health goals.",
     "Small steps every day lead to big results."
 )
+
 @Composable
 private fun getWelcomeMessage(userName: String): String {
     val calendar = Calendar.getInstance()
@@ -67,12 +65,12 @@ private fun getWelcomeMessage(userName: String): String {
     }
     return if (userName.isNotBlank()) "$greeting, $userName!" else "$greeting!"
 }
+
 private fun Medicine.isTakenToday(): Boolean {
     if (this.lastTakenTimestamp <= 0) return false
     val lastTakenDate = LocalDate.ofEpochDay(this.lastTakenTimestamp / (1000 * 60 * 60 * 24))
     return lastTakenDate == LocalDate.now()
 }
-// ...
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalAnimationApi::class)
 @Composable
@@ -89,31 +87,6 @@ fun HomeScreen(
 
     val hapticFeedback = LocalHapticFeedback.current
     val hapticEnabled by viewModel.hapticEnabled.collectAsState()
-
-    var medicineToDelete by remember { mutableStateOf<Medicine?>(null) }
-
-    if (medicineToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { medicineToDelete = null },
-            title = { Text("Delete Medication") },
-            text = { Text("Are you sure you want to delete \"${medicineToDelete?.name}\"? This will permanently cancel all upcoming reminders.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        medicineToDelete?.let { viewModel.deleteMedicine(context, it) }
-                        medicineToDelete = null
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { medicineToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val notificationPermissionState = rememberPermissionState(
@@ -161,7 +134,7 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState())
     ) {
 
-        // --- 1. Daily Progress Header (Immersive Gradient) ---
+        // --- 1. Daily Progress Header (Immersive Gradient Dashboard) ---
         DailyProgressHeader(
             welcomeMessage = welcomeMessage,
             quote = randomQuote,
@@ -170,7 +143,7 @@ fun HomeScreen(
             progress = animatedProgress
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // --- 2. "Next Up" Card ---
         AnimatedVisibility(
@@ -205,12 +178,6 @@ fun HomeScreen(
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                     viewModel.markAsTaken(context, medicine)
-                },
-                onDelete = { medicine ->
-                    if (hapticEnabled) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                    medicineToDelete = medicine
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -272,7 +239,7 @@ fun DailyProgressHeader(
             Spacer(modifier = Modifier.width(20.dp))
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(88.dp)
+                modifier = Modifier.size(96.dp)
             ) {
                 CircularProgressIndicator(
                     progress = 1f,
@@ -294,7 +261,7 @@ fun DailyProgressHeader(
                 ) {
                     Text(
                         text = "$takenDoses/$totalDoses",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -324,17 +291,17 @@ fun NextUpCard(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isMissed) 
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f) 
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f) 
             else 
-                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
         ),
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(
             width = 1.dp,
             color = if (isMissed) 
-                MaterialTheme.colorScheme.error.copy(alpha = 0.3f) 
+                MaterialTheme.colorScheme.error.copy(alpha = 0.25f) 
             else 
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f)
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
     ) {
         AnimatedContent(
@@ -342,7 +309,7 @@ fun NextUpCard(
             transitionSpec = {
                 (fadeIn(animationSpec = tween(300)) +
                         slideInVertically(animationSpec = tween(300, 100), initialOffsetY = { it / 2 }))
-                    .with(fadeOut(animationSpec = tween(200)))
+                    .togetherWith(fadeOut(animationSpec = tween(200)))
             }, label = "NextUpCardContent"
         ) { medicine ->
             if (medicine == null) {
@@ -470,8 +437,7 @@ fun NextUpCard(
 fun TimeSectionCard(
     timeOfDay: TimeOfDay,
     medicines: List<Medicine>,
-    onMarkAsTaken: (Medicine) -> Unit,
-    onDelete: (Medicine) -> Unit
+    onMarkAsTaken: (Medicine) -> Unit
 ) {
     val sectionIcon = when (timeOfDay) {
         TimeOfDay.Morning -> Icons.Filled.WbSunny
@@ -483,6 +449,12 @@ fun TimeSectionCard(
         TimeOfDay.Morning -> Color(0xFFE65100) // Warm orange
         TimeOfDay.Afternoon -> Color(0xFFFBC02D) // Sun yellow
         TimeOfDay.Night -> Color(0xFF1E88E5) // Blue night
+    }
+
+    val sectionBg = when (timeOfDay) {
+        TimeOfDay.Morning -> Color(0xFFFFF3E0)
+        TimeOfDay.Afternoon -> Color(0xFFFFFDE7)
+        TimeOfDay.Night -> Color(0xFFE3F2FD)
     }
 
     Card(
@@ -498,17 +470,25 @@ fun TimeSectionCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
+            // Symmetrical, cleaner Section Header layout
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
             ) {
-                Icon(
-                    imageVector = sectionIcon,
-                    contentDescription = timeOfDay.name,
-                    tint = sectionColor,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(sectionBg, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = sectionIcon,
+                        contentDescription = timeOfDay.name,
+                        tint = sectionColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = timeOfDay.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -518,14 +498,18 @@ fun TimeSectionCard(
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "${medicines.count { it.isTakenToday() }}/${medicines.size} Done",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                 )
             }
 
-            Divider(
+            HorizontalDivider(
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -534,21 +518,21 @@ fun TimeSectionCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.DoneAll,
                         contentDescription = "All clear",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                        modifier = Modifier.size(18.dp)
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = "Nothing scheduled here!",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -557,11 +541,10 @@ fun TimeSectionCard(
                     MedicineItem(
                         medicine = medicine,
                         onMarkAsTaken = { onMarkAsTaken(medicine) },
-                        onDelete = { onDelete(medicine) },
-                        modifier = Modifier.padding(vertical = 6.dp)
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
                     if (index < medicines.size - 1) {
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             thickness = 0.5.dp,
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
@@ -573,11 +556,11 @@ fun TimeSectionCard(
     }
 }
 
+// Decluttered, clean list row item
 @Composable
 fun MedicineItem(
     medicine: Medicine,
     onMarkAsTaken: () -> Unit,
-    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -634,18 +617,8 @@ fun MedicineItem(
                 )
             }
         }
-        IconButton(
-            onClick = onDelete,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = "Delete Medicine",
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-            )
-        }
-        Spacer(modifier = Modifier.width(4.dp))
+        
+        // Single clean Check button on the right
         IconButton(
             onClick = onMarkAsTaken,
             enabled = !isTakenToday,
@@ -692,7 +665,6 @@ fun ExpiryChip(expiryStatus: ExpiryStatus) {
 data class ExpiryStatus(val status: String, val color: Color)
 fun getExpiryStatus(expiryDate: LocalDate): ExpiryStatus {
     val today = LocalDate.now()
-    // FIX: Access property correctly
     val daysUntilExpiry = ChronoUnit.DAYS.between(today, expiryDate)
 
     return when {
