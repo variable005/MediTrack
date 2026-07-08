@@ -58,13 +58,14 @@ private val healthQuotes = listOf(
     "Small steps every day lead to big results."
 )
 @Composable
-private fun getWelcomeMessage(): String {
+private fun getWelcomeMessage(userName: String): String {
     val calendar = Calendar.getInstance()
-    return when (calendar.get(Calendar.HOUR_OF_DAY)) {
-        in 5..11 -> "Good Morning!"
-        in 12..17 -> "Good Afternoon!"
-        else -> "Good Evening!"
+    val greeting = when (calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 5..11 -> "Good Morning"
+        in 12..17 -> "Good Afternoon"
+        else -> "Good Evening"
     }
+    return if (userName.isNotBlank()) "$greeting, $userName!" else "$greeting!"
 }
 private fun Medicine.isTakenToday(): Boolean {
     if (this.lastTakenTimestamp <= 0) return false
@@ -82,7 +83,8 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val groupedMedicines by viewModel.groupedActiveMedicines.collectAsState()
-    val welcomeMessage = getWelcomeMessage()
+    val userName by viewModel.userName.collectAsState()
+    val welcomeMessage = getWelcomeMessage(userName)
     val randomQuote = remember { healthQuotes.random(Random(System.currentTimeMillis())) }
 
     val hapticFeedback = LocalHapticFeedback.current

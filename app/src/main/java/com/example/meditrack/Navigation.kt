@@ -41,6 +41,7 @@ import com.example.meditrack.ui.screens.AddMedicineScreen
 import com.example.meditrack.ui.screens.HistoryScreen
 import com.example.meditrack.ui.screens.HomeScreen
 import com.example.meditrack.ui.screens.SettingsScreen
+import com.example.meditrack.ui.screens.OnboardingScreen
 import com.example.meditrack.viewmodel.MainViewModel
 
 @Composable
@@ -169,9 +170,12 @@ fun AppNavigation(viewModel: MainViewModel) {
             }
         }
     ) { innerPadding ->
+        val onboardingCompleted by viewModel.onboardingCompleted.collectAsState()
+        val startDestination = if (onboardingCompleted) BottomNavItem.Home.route else "onboarding"
+
         NavHost(
             navController = navController,
-            startDestination = BottomNavItem.Home.route,
+            startDestination = startDestination,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 slideIntoContainer(
@@ -209,6 +213,9 @@ fun AppNavigation(viewModel: MainViewModel) {
             }
             composable(settingsNavItem.route) {
                 SettingsScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
+            }
+            composable("onboarding") {
+                OnboardingScreen(navController = navController, viewModel = viewModel, paddingValues = innerPadding)
             }
         }
     }

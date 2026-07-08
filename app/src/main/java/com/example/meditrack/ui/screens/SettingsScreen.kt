@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
@@ -101,7 +103,7 @@ fun SettingsScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     Text(
                         text = "App Preferences",
@@ -110,21 +112,56 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
+                    // User Profile Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                triggerHaptic()
+                                navController.navigate("onboarding")
+                            }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Edit Profile",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Edit Profile & Setup", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text("Change your name and onboarding preferences", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowRight,
+                            contentDescription = "Navigate",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
                     // Haptic Feedback Row
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(Icons.Filled.Vibration, contentDescription = "Haptics", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Column {
-                                Text("Haptic Feedback", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                                Text("Vibrate on interactions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+                        Icon(
+                            imageVector = Icons.Filled.Vibration,
+                            contentDescription = "Haptics",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Haptic Feedback", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text("Vibrate on interactions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(
                             checked = hapticEnabled,
@@ -139,105 +176,88 @@ fun SettingsScreen(
 
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                    // Theme Selection Block
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(Icons.Filled.Palette, contentDescription = "Theme", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Theme Selection Block (Symmetrical Pill Selector)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Palette,
+                                contentDescription = "Theme Mode",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text("Theme Mode", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            val themes = listOf("System" to "system", "Light" to "light", "Dark" to "dark")
-                            themes.forEach { (label, value) ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .clickable {
-                                            viewModel.setThemeMode(value)
-                                            triggerHaptic()
-                                        }
-                                        .padding(vertical = 4.dp, horizontal = 2.dp)
-                                ) {
-                                    RadioButton(
-                                        selected = themeMode == value,
-                                        onClick = {
-                                            viewModel.setThemeMode(value)
-                                            triggerHaptic()
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Text(label, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                                }
+                        SegmentedControl(
+                            options = listOf("System" to "system", "Light" to "light", "Dark" to "dark"),
+                            selectedOption = themeMode,
+                            onOptionSelected = {
+                                viewModel.setThemeMode(it)
+                                triggerHaptic()
                             }
-                        }
+                        )
                     }
 
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                    // Text Size Block
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(Icons.Filled.TextFormat, contentDescription = "Text Size", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Text Size Block (Symmetrical Pill Selector)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.TextFormat,
+                                contentDescription = "Text Size",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text("Text Size", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            val sizes = listOf("Small" to "small", "Medium" to "medium", "Large" to "large")
-                            sizes.forEach { (label, value) ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .clickable {
-                                            viewModel.setTextSize(value)
-                                            triggerHaptic()
-                                        }
-                                        .padding(vertical = 4.dp, horizontal = 2.dp)
-                                ) {
-                                    RadioButton(
-                                        selected = textSize == value,
-                                        onClick = {
-                                            viewModel.setTextSize(value)
-                                            triggerHaptic()
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Text(label, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                                }
+                        SegmentedControl(
+                            options = listOf("Small" to "small", "Medium" to "medium", "Large" to "large"),
+                            selectedOption = textSize,
+                            onOptionSelected = {
+                                viewModel.setTextSize(it)
+                                triggerHaptic()
                             }
-                        }
+                        )
                     }
 
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                    // Color Theme Block (Dynamic color tweaking)
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(Icons.Filled.Palette, contentDescription = "Theme Color", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Color Theme Block (Symmetrical Circular Swatches)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Palette,
+                                contentDescription = "Theme Color",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text("Theme Color", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                         }
 
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             val colorsList = listOf(
                                 Triple("Teal", "teal", Color(0xFF00696B)),
@@ -278,7 +298,7 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Section 2: About Application (Humorous) ---
+            // --- Section 2: About Application (Symmetric details) ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -287,7 +307,7 @@ fun SettingsScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -302,21 +322,24 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = "\"We remind you so your mom doesn't have to\"",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
 
                     Text(
                         text = "Because let's face it: you can remember all the lyrics to that obscure pop song from 2015, but you will 100% forget if you took your blue pill 20 minutes ago. MediTrack is here to save you from your own short-term memory memory leaks. You're welcome.",
                         style = MaterialTheme.typography.bodyMedium,
-                        lineHeight = 20.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        lineHeight = 22.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -325,14 +348,14 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
                 ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 shape = MaterialTheme.shapes.large
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
@@ -349,7 +372,7 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = "\"Normal is just an agreement between yesterday and today.\"",
@@ -370,7 +393,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
                     HorizontalDivider(
@@ -391,6 +414,45 @@ fun SettingsScreen(
 
             // Safety space for gestural navigators/bottom area
             Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+// Custom Symmetrical Pill Segmented Control Composable
+@Composable
+private fun <T> SegmentedControl(
+    options: List<Pair<String, T>>,
+    selectedOption: T,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f), CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), CircleShape)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        options.forEach { (label, value) ->
+            val isSelected = selectedOption == value
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onOptionSelected(value) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

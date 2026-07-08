@@ -45,6 +45,12 @@ class MainViewModel(
     private val _themeColor = MutableStateFlow(sharedPreferences.getString("theme_color", "teal") ?: "teal")
     val themeColor: StateFlow<String> = _themeColor.asStateFlow()
 
+    private val _userName = MutableStateFlow(sharedPreferences.getString("user_name", "") ?: "")
+    val userName: StateFlow<String> = _userName.asStateFlow()
+
+    private val _onboardingCompleted = MutableStateFlow(sharedPreferences.getBoolean("onboarding_completed", false))
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
+
     fun setHapticEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean("haptic_enabled", enabled).apply()
         _hapticEnabled.value = enabled
@@ -64,6 +70,16 @@ class MainViewModel(
         sharedPreferences.edit().putString("theme_color", color).apply()
         _themeColor.value = color
         MedicineWidgetProvider.updateAllWidgets(getApplication())
+    }
+
+    fun setUserName(name: String) {
+        sharedPreferences.edit().putString("user_name", name).apply()
+        _userName.value = name
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        sharedPreferences.edit().putBoolean("onboarding_completed", completed).apply()
+        _onboardingCompleted.value = completed
     }
 
     // --- Helper function to categorize time ---
