@@ -195,7 +195,12 @@ fun SettingsScreen(
                         }
 
                         SegmentedControl(
-                            options = listOf("System" to "system", "Light" to "light", "Dark" to "dark"),
+                            options = listOf(
+                                "System" to "system",
+                                "Light" to "light",
+                                "Dark" to "dark",
+                                "Time" to "time"
+                            ),
                             selectedOption = themeMode,
                             onOptionSelected = {
                                 viewModel.setThemeMode(it)
@@ -237,6 +242,7 @@ fun SettingsScreen(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     // Color Theme Block (Symmetrical Circular Swatches)
+                    val isTimeWise = themeMode == "time"
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -247,11 +253,31 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Filled.Palette,
                                 contentDescription = "Theme Color",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = if (isTimeWise) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("Theme Color", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Column {
+                                Text(
+                                    text = "Theme Color",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isTimeWise) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (isTimeWise) {
+                                    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                    val autoColorName = when (hour) {
+                                        in 5..11 -> "Teal (Morning)"
+                                        in 12..17 -> "Orange (Afternoon)"
+                                        else -> "Purple (Night)"
+                                    }
+                                    Text(
+                                        text = "Automated: $autoColorName",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
 
                         Row(
@@ -266,24 +292,40 @@ fun SettingsScreen(
                                 Triple("Green", "green", Color(0xFF386A20)),
                                 Triple("Orange", "orange", Color(0xFF8B5000))
                             )
+                            val activeColorValue = if (isTimeWise) {
+                                val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                when (hour) {
+                                    in 5..11 -> "teal"
+                                    in 12..17 -> "orange"
+                                    else -> "purple"
+                                }
+                            } else {
+                                themeColor
+                            }
+
                             colorsList.forEach { (name, value, colorSample) ->
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .background(colorSample, CircleShape)
+                                        .background(
+                                            colorSample.copy(alpha = if (isTimeWise && activeColorValue != value) 0.3f else 1f),
+                                            CircleShape
+                                        )
                                         .clip(CircleShape)
                                         .border(
-                                            width = if (themeColor == value) 3.dp else 1.dp,
-                                            color = if (themeColor == value) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                                            width = if (activeColorValue == value) 3.dp else 1.dp,
+                                            color = if (activeColorValue == value) {
+                                                if (isTimeWise) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            } else Color.Transparent,
                                             shape = CircleShape
                                         )
-                                        .clickable {
+                                        .clickable(enabled = !isTimeWise) {
                                             viewModel.setThemeColor(value)
                                             triggerHaptic()
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (themeColor == value) {
+                                    if (activeColorValue == value) {
                                         Icon(
                                             imageVector = Icons.Filled.Check,
                                             contentDescription = name,

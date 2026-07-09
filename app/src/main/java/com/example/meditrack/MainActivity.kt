@@ -27,16 +27,33 @@ class MainActivity : ComponentActivity() {
             val textSize by mainViewModel.textSize.collectAsState()
             val themeColor by mainViewModel.themeColor.collectAsState()
 
-            val darkTheme = when (themeMode) {
-                "light" -> false
-                "dark" -> true
-                else -> isSystemInDarkTheme()
+            val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            val isTimeWise = themeMode == "time"
+
+            val darkTheme = if (isTimeWise) {
+                currentHour !in 5..17
+            } else {
+                when (themeMode) {
+                    "light" -> false
+                    "dark" -> true
+                    else -> isSystemInDarkTheme()
+                }
+            }
+
+            val activeColor = if (isTimeWise) {
+                when (currentHour) {
+                    in 5..11 -> "teal"
+                    in 12..17 -> "orange"
+                    else -> "purple"
+                }
+            } else {
+                themeColor
             }
 
             MediTrackTheme(
                 darkTheme = darkTheme,
                 textSize = textSize,
-                themeColor = themeColor
+                themeColor = activeColor
             ) {
                 AppNavigation(viewModel = mainViewModel)
             }
