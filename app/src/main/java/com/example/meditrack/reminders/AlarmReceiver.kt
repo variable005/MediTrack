@@ -62,6 +62,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
             }
         } else if (intent.action == ACTION_SNOOZE) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(medicineId)
+
             CoroutineScope(Dispatchers.IO).launch {
                 repository.getMedicineById(medicineId)?.let { medicine ->
                     val schedule = scheduleId?.let { id -> repository.schedulesForMedicineOnce(medicine.id).firstOrNull { it.id == id } }

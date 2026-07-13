@@ -13,6 +13,8 @@ import com.example.meditrack.MainActivity
 import com.example.meditrack.MediTrackApplication
 import com.example.meditrack.R
 import com.example.meditrack.data.Medicine
+import com.example.meditrack.data.DoseLog
+import com.example.meditrack.data.DoseStatus
 import com.example.meditrack.reminders.AlarmScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,12 +42,19 @@ class MedicineWidgetProvider : AppWidgetProvider() {
                     val repository = (context.applicationContext as MediTrackApplication).repository
                     val medicine = repository.getMedicineById(medicineId)
                     if (medicine != null) {
-                        val updated = medicine.copy(lastTakenTimestamp = System.currentTimeMillis())
+                        val now = System.currentTimeMillis()
+                        val updated = medicine.copy(
+                            lastTakenTimestamp = now,
+                            remainingQuantity = (medicine.remainingQuantity - 1).coerceAtLeast(0)
+                        )
                         repository.update(updated)
+                        repository.logDose(DoseLog(medicineId = medicine.id, scheduledAt = now, status = DoseStatus.TAKEN))
 
-                        // Reschedule alarm notifications
-                        AlarmScheduler.cancelReminder(context, medicine)
-                        AlarmScheduler.scheduleReminder(context, updated)
+                        // Reschedule alarm notifications for all active schedules
+                        repository.schedulesForMedicineOnce(medicine.id).forEach { schedule ->
+                            AlarmScheduler.cancelReminder(context, medicine, schedule)
+                            AlarmScheduler.scheduleReminder(context, updated, schedule)
+                        }
 
                         // Update all widget instances
                         updateAllWidgets(context)
