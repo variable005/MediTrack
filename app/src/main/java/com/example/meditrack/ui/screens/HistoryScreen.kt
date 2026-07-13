@@ -137,6 +137,7 @@ fun HistoryScreen(
                     list = activeMedicines,
                     emptyMessage = "No active medicines found.",
                     isExpired = false,
+                    onPauseToggle = { medicine -> viewModel.setPaused(context, medicine, !medicine.isPaused) },
                     onDelete = { medicine ->
                         if (hapticEnabled) {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -149,6 +150,7 @@ fun HistoryScreen(
                     list = expiredMedicines,
                     emptyMessage = "No expired medicines found.",
                     isExpired = true,
+                    onPauseToggle = {},
                     onDelete = { medicine ->
                         if (hapticEnabled) {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -168,6 +170,7 @@ fun MedicineHistoryList(
     emptyMessage: String,
     isExpired: Boolean,
     onDelete: (Medicine) -> Unit,
+    onPauseToggle: (Medicine) -> Unit,
     paddingValues: PaddingValues = PaddingValues()
 ) {
     if (list.isEmpty()) {
@@ -187,7 +190,8 @@ fun MedicineHistoryList(
                 HistoryMedicineItem(
                     medicine = medicine,
                     isExpired = isExpired,
-                    onDelete = { onDelete(medicine) }
+                    onDelete = { onDelete(medicine) },
+                    onPauseToggle = { onPauseToggle(medicine) }
                 )
             }
         }
@@ -224,6 +228,7 @@ fun HistoryMedicineItem(
     medicine: Medicine,
     isExpired: Boolean,
     onDelete: () -> Unit,
+    onPauseToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -337,6 +342,11 @@ fun HistoryMedicineItem(
                 }
             }
             Spacer(modifier = Modifier.width(8.dp))
+            if (!isExpired) {
+                TextButton(onClick = onPauseToggle) {
+                    Text(if (medicine.isPaused) "Resume" else "Pause")
+                }
+            }
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier.size(36.dp)

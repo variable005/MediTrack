@@ -15,5 +15,12 @@ data class Medicine(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val expiryDate: LocalDate,
-    val lastTakenTimestamp: Long = 0 // To track if taken today
+    val lastTakenTimestamp: Long = 0,
+    val instructions: String = "",
+    val notes: String = "",
+    val imageUri: String? = null,
+    val initialQuantity: Int = 0,
+    val remainingQuantity: Int = 0,
+    val refillThreshold: Int = 0,
+    val isPaused: Boolean = false
 )

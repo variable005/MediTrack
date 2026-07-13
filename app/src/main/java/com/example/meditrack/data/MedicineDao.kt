@@ -22,12 +22,12 @@ interface MedicineDao {
     @Query("SELECT * FROM medicines WHERE id = :id")
     suspend fun getMedicineById(id: Int): Medicine?
 
-    @Query("SELECT * FROM medicines WHERE expiryDate >= :today ORDER BY reminderTime ASC")
+    @Query("SELECT * FROM medicines WHERE endDate >= :today ORDER BY reminderTime ASC")
     fun getActiveMedicines(today: String = LocalDate.now().toString()): Flow<List<Medicine>>
 
     @Query("SELECT * FROM medicines WHERE expiryDate < :today ORDER BY expiryDate DESC")
     fun getExpiredMedicines(today: String = LocalDate.now().toString()): Flow<List<Medicine>>
 
-    @Query("SELECT * FROM medicines WHERE endDate >= :today")
+    @Query("SELECT * FROM medicines WHERE endDate >= :today AND isPaused = 0")
     suspend fun getAllActiveForReschedule(today: String = LocalDate.now().toString()): List<Medicine>
 }

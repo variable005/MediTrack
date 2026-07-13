@@ -68,7 +68,8 @@ private fun getWelcomeMessage(userName: String): String {
 
 private fun Medicine.isTakenToday(): Boolean {
     if (this.lastTakenTimestamp <= 0) return false
-    val lastTakenDate = LocalDate.ofEpochDay(this.lastTakenTimestamp / (1000 * 60 * 60 * 24))
+    val lastTakenDate = java.time.Instant.ofEpochMilli(this.lastTakenTimestamp)
+        .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
     return lastTakenDate == LocalDate.now()
 }
 

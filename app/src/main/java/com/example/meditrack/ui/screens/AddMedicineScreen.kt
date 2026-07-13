@@ -47,6 +47,10 @@ fun AddMedicineScreen(
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var expiryDate by remember { mutableStateOf<LocalDate?>(null) }
+    var instructions by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("") }
+    var refillThreshold by remember { mutableStateOf("") }
 
     var hasAttemptedSave by remember { mutableStateOf(false) }
 
@@ -116,6 +120,9 @@ fun AddMedicineScreen(
                             startDate = startDate!!,
                             endDate = endDate!!,
                             expiryDate = expiryDate!!
+                            , instructions = instructions, notes = notes,
+                            quantity = quantity.toIntOrNull() ?: 0,
+                            refillThreshold = refillThreshold.toIntOrNull() ?: 0
                         )
                         navController.popBackStack()
                     }
@@ -168,6 +175,16 @@ fun AddMedicineScreen(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                         )
+                    )
+                    OutlinedTextField(
+                        value = instructions, onValueChange = { instructions = it },
+                        label = { Text("Instructions (e.g. after food)") },
+                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = notes, onValueChange = { notes = it },
+                        label = { Text("Private notes") }, modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp), minLines = 2
                     )
                     OutlinedTextField(
                         value = dosage,
@@ -248,6 +265,18 @@ fun AddMedicineScreen(
             }
 
             // Spacer to push content above the floating nav bar / bottom padding
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Inventory & refill", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    OutlinedTextField(value = quantity, onValueChange = { quantity = it.filter(Char::isDigit) }, label = { Text("Pills / units available") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = refillThreshold, onValueChange = { refillThreshold = it.filter(Char::isDigit) }, label = { Text("Refill alert at") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+            }
             Spacer(Modifier.height(100.dp))
         }
     }

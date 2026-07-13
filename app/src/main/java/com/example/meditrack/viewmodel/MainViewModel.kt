@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.meditrack.data.Medicine
 import com.example.meditrack.data.MedicineRepository
+import com.example.meditrack.data.MedicineSchedule
+import com.example.meditrack.data.DoseLog
+import com.example.meditrack.data.DoseStatus
 import com.example.meditrack.reminders.AlarmScheduler
 import com.example.meditrack.widget.MedicineWidgetProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,7 +97,8 @@ class MainViewModel(
     // --- StateFlow for grouped medicines using Enum ---
     val groupedActiveMedicines: StateFlow<Map<TimeOfDay, List<Medicine>>> = repository.activeMedicines
         .map { medicines ->
-            val grouped = medicines.groupBy { getGroupForTime(it.reminderTime) }
+            val scheduledMedicines = medicines.filterNot { it.isPaused }
+            val grouped = scheduledMedicines.groupBy { getGroupForTime(it.reminderTime) }
             val sortedMap = sortedMapOf<TimeOfDay, List<Medicine>>()
             sortedMap[TimeOfDay.Morning] = grouped.getOrDefault(TimeOfDay.Morning, emptyList())
             sortedMap[TimeOfDay.Afternoon] = grouped.getOrDefault(TimeOfDay.Afternoon, emptyList())
@@ -127,17 +131,22 @@ class MainViewModel(
 
     fun addMedicine(
         context: Context, name: String, dosage: String, reminderTime: LocalTime,
-        startDate: LocalDate, endDate: LocalDate, expiryDate: LocalDate
+        startDate: LocalDate, endDate: LocalDate, expiryDate: LocalDate,
+        instructions: String = "", notes: String = "", quantity: Int = 0, refillThreshold: Int = 0
     ) {
         viewModelScope.launch {
             val newMedicine = Medicine(
                 name = name, dosage = dosage, reminderTime = reminderTime,
-                startDate = startDate, endDate = endDate, expiryDate = expiryDate
+                startDate = startDate, endDate = endDate, expiryDate = expiryDate,
+                instructions = instructions, notes = notes, initialQuantity = quantity,
+                remainingQuantity = quantity, refillThreshold = refillThreshold
             )
             val newId = repository.insert(newMedicine)
             val insertedMedicine = repository.getMedicineById(newId.toInt())
             if (insertedMedicine != null) {
-                AlarmScheduler.scheduleReminder(context, insertedMedicine)
+                val scheduleId = repository.addSchedule(MedicineSchedule(medicineId = insertedMedicine.id, reminderTime = reminderTime)).toInt()
+                val schedule = MedicineSchedule(id = scheduleId, medicineId = insertedMedicine.id, reminderTime = reminderTime)
+                AlarmScheduler.scheduleReminder(context, insertedMedicine, schedule)
             }
             MedicineWidgetProvider.updateAllWidgets(context)
         }
@@ -145,17 +154,35 @@ class MainViewModel(
 
     fun markAsTaken(context: Context, medicine: Medicine) {
         viewModelScope.launch {
-            val updatedMedicine = medicine.copy(lastTakenTimestamp = System.currentTimeMillis())
+            val now = System.currentTimeMillis()
+            val updatedMedicine = medicine.copy(lastTakenTimestamp = now, remainingQuantity = (medicine.remainingQuantity - 1).coerceAtLeast(0))
             repository.update(updatedMedicine)
-            AlarmScheduler.cancelReminder(context, medicine)
-            AlarmScheduler.scheduleReminder(context, updatedMedicine)
+            repository.logDose(DoseLog(medicineId = medicine.id, scheduledAt = now, status = DoseStatus.TAKEN))
+            repository.schedulesForMedicineOnce(medicine.id).forEach { schedule ->
+                AlarmScheduler.cancelReminder(context, medicine, schedule)
+                AlarmScheduler.scheduleReminder(context, updatedMedicine, schedule)
+            }
             MedicineWidgetProvider.updateAllWidgets(context)
         }
      }
 
+    fun setPaused(context: Context, medicine: Medicine, paused: Boolean) = viewModelScope.launch {
+        val updated = medicine.copy(isPaused = paused)
+        repository.update(updated)
+        repository.schedulesForMedicineOnce(medicine.id).forEach { schedule ->
+            AlarmScheduler.cancelReminder(context, medicine, schedule)
+            if (!paused) AlarmScheduler.scheduleReminder(context, updated, schedule)
+        }
+    }
+
+    fun addReminderTime(context: Context, medicine: Medicine, time: LocalTime) = viewModelScope.launch {
+        val id = repository.addSchedule(MedicineSchedule(medicineId = medicine.id, reminderTime = time)).toInt()
+        AlarmScheduler.scheduleReminder(context, medicine, MedicineSchedule(id = id, medicineId = medicine.id, reminderTime = time))
+    }
+
     fun deleteMedicine(context: Context, medicine: Medicine) {
         viewModelScope.launch {
-            AlarmScheduler.cancelReminder(context, medicine)
+            repository.schedulesForMedicineOnce(medicine.id).forEach { AlarmScheduler.cancelReminder(context, medicine, it) }
             repository.delete(medicine)
             MedicineWidgetProvider.updateAllWidgets(context)
         }

@@ -17,7 +17,9 @@ class BootCompletedReceiver : BroadcastReceiver() {
             CoroutineScope(Dispatchers.IO).launch {
                 val activeMedicines = repository.getAllActiveForReschedule()
                 activeMedicines.forEach { medicine ->
-                    AlarmScheduler.scheduleReminder(context, medicine)
+                    val schedules = repository.schedulesForMedicineOnce(medicine.id)
+                    if (schedules.isEmpty()) AlarmScheduler.scheduleReminder(context, medicine)
+                    else schedules.forEach { AlarmScheduler.scheduleReminder(context, medicine, it) }
                 }
             }
         }
